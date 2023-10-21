@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      - MYSQL_DATABASE=javatodev_application_db
+      - MYSQL_ROOT_PASSWORD=mauFJcuf5dhRMQrjj
+      # - MYSQL_USER=app
+      # - MYSQL_PASSWORD=apppw
+    ports:
+      - '3306:3306'
+    volumes:
+      - db:/var/lib/mysql
+      # - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    restart: on-failure:10
+    ports:
+      - "8201:8201"
+    environment:
+      VAULT_ADDR: 'https://0.0.0.0:8201'
+      VAULT_LOCAL_CONFIG: '{"listener": [{"tcp":{"address": "0.0.0.0:8201", "tls_disable": true}}], "default_lease_ttl": "168h", "max_lease_ttl": "720h"}, "ui": true}'
+      VAULT_DEV_ROOT_TOKEN_ID: '00000000-0000-0000-0000-000000000000'
+      VAULT_TOKEN: '00000000-0000-0000-0000-000000000000'
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault-volume:/data
+    healthcheck:
+      retries: 5
+    command: server -dev -dev-root-token-id="00000000-0000-0000-0000-000000000000"
+volumes:
+  db:
+    driver: local
+  vault-volume:
+    driver: local
