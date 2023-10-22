@@ -40,5 +40,6 @@ vscode:
   #mysql -uroot -pmauFJcuf5dhRMQrjj -h 127.0.0.1 -P 3306 -D javatodev_application_dev_db
 
 #curl http://localhost:8888/javatodev_core_api/default | jq '.'
+#curl http://localhost:8888/javatodev_core_api/dev | jq '.'
 
 
