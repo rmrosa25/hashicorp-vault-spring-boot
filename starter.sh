@@ -40,7 +40,7 @@ docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && ex
 '
 docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault write auth/ldap/groups/configserver policies=my-policy'
 
-#docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault login -method=ldap username=user'
+#docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && vault login -method=ldap username=user'
 
 # docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault auth enable userpass'
 
@@ -86,9 +86,7 @@ memberUid: user
 
 EOF
 '
-cat <<EOF > ~/password.txt
-user123
-EOF
+echo -n "user123" > ~/password.txt
 
 cat <<EOF > ~/vault-proxy.hcl
 pid_file = "./pidfile"
@@ -124,5 +122,6 @@ listener "tcp" {
 }
 EOF
 
-
-vault proxy -config=vault-proxy.hcl
+cd ~/
+vault proxy -config=vault-proxy.hcl &
+cd -
