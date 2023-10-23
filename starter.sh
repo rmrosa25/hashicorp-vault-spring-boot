@@ -32,11 +32,14 @@ docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && ex
 docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault kv list -mount=config-server'
 docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault kv get -mount=config-server javatodev_core_api'
 
-cat <<EOF > ~/vault-agent.hcl
-pid_file = "./vault-agent.pid"
+cat <<EOF > ~/vault-proxy.hcl
+pid_file = "./pidfile"
 
 vault {
-  address = "http://127.0.0.1:8201"
+  address = "http://127.0.0.1:8200"
+  retry {
+    num_retries = 5
+  }
 }
 
 auto_auth {
@@ -45,24 +48,21 @@ auto_auth {
       username = "user"
       password = "user123"
     }
-  }
-
-  sink "file" {
-    config = {
-      path = "./agent-token"
-    }
-  }
-
+ }
 }
 
 cache {
+  // An empty cache stanza still enables caching
+}
+
+api_proxy {
   use_auto_auth_token = true
 }
 
 listener "tcp" {
-  address     = "127.0.0.1:8101"
+  address = "127.0.0.1:8101"
   tls_disable = true
 }
 EOF
 
-vault agent -config=vault-agent.hcl
+vault proxy -config=vault-proxy.hcl
