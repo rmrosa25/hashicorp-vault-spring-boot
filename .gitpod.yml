@@ -10,26 +10,27 @@ ports:
     onOpen: open-browser
 tasks:
   - name: dependencies
-    init: |
-       docker-compose up -d
-  - name: vault
     before: |
-        wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-        sudo apt update && sudo apt install vault
+      wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+      echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+      sudo apt update && sudo apt install vault
     init: |
-        #export VAULT_ADDR="http://127.0.0.1:8201"
-        #export VAULT_TOKEN="00000000-0000-0000-0000-000000000000"
-        # export VAULT_NAMESPACE=admin
-        # vault namespace create vf-eiot/iot-connectivity/iotmc/non-prod
-        docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault kv put secret/javatodev_core_api spring.datasource.database=javatodev_application_db spring.datasource.password=mauFJcuf5dhRMQrjj spring.datasource.username=root app.config.auth.token=5bd8b84a-7b9a-11ed-a1eb-0242ac120002 app.config.auth.username=actuator'
-        docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault kv put secret/javatodev_core_api/dev spring.datasource.database=javatodev_application_db spring.datasource.password=mauFJcuf5dhRMQrjj spring.datasource.username=root app.config.auth.token=34ef65f0-7b9d-11ed-a1eb-0242ac120002 app.config.auth.username=dev_user'
+      ./starter.sh
+  - name: spring_vault
+    init: |
+      sleep 15
+      cd springcloudclient/javatodev_core_api_vault/
+      mvn spring-boot:run
   - name: config-server
     init: |
+      sleep 15
       cd springcloudserver/spring-cloud-config-server/
+      mvn spring-boot:run
+  - name: spring_config
+    init: |
+      sleep 20
+      cd springcloudclient/javatodev_core_api_config/
       mvn spring-boot:run 
-  - name: springboot
-    init: ./gradlew bootRun
 
 vscode:
   extensions:
