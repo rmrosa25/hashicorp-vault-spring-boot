@@ -113,7 +113,8 @@ cache {
 }
 
 api_proxy {
-  use_auto_auth_token = true
+  use_auto_auth_token = "force"
+  enforce_consistency = "always"
 }
 
 listener "tcp" {
