@@ -40,6 +40,27 @@ docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && ex
 '
 docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault write auth/ldap/groups/configserver policies=my-policy'
 
+
+#######TRANSIT###########
+
+docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault secrets enable transit'
+docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault write -f transit/keys/orders'
+
+docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault policy write app-orders -<<EOF
+path "transit/encrypt/orders" {
+   capabilities = [ "update" ]
+}
+path "transit/decrypt/orders" {
+   capabilities = [ "update" ]
+}
+EOF
+'
+
+docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault token create -policy=app-orders'
+
+docker-compose exec vault sh -c 'apk add jq && export VAULT_ADDR="http://127.0.0.1:8201" && export APP_ORDER_TOKEN=$(vault token create -policy=app-orders -format=json | jq -r ".auth | .client_token") && export CIPHERTEXT=$(VAULT_TOKEN=$APP_ORDER_TOKEN vault write transit/encrypt/orders plaintext=$(echo "4111 1111 1111 1111"| base64) -format=json | jq -r ".data | .ciphertext") && VAULT_TOKEN=$APP_ORDER_TOKEN vault write transit/decrypt/orders ciphertext=$CIPHERTEXT -format=json | jq -r ".data | .plaintext" | base64 -d'
+
+
 #docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && vault login -method=ldap username=user'
 
 # docker-compose exec vault sh -c 'export VAULT_ADDR="http://127.0.0.1:8201" && export VAULT_TOKEN="00000000-0000-0000-0000-000000000000" && vault auth enable userpass'
